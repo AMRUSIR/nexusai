@@ -1,1 +1,5 @@
-
+export async function GET() {
+  return Response.json({
+    message: "NexusAI image generation API is ready!"
+  });
+}
