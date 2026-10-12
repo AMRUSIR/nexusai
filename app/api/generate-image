@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { InferenceClient } from "@huggingface/inference";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -10,7 +9,7 @@ export async function POST(request: Request) {
 
     if (!token) {
       return NextResponse.json(
-        { error: "HF_TOKEN is missing. Add it to Vercel Environment Variables." },
+        { error: "HF_TOKEN is missing from Vercel." },
         { status: 500 }
       );
     }
@@ -25,39 +24,77 @@ export async function POST(request: Request) {
       );
     }
 
-    const client = new InferenceClient(token);
+    const response = await fetch(
+      "https://router.huggingface.co/v1/images/generations",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "black-forest-labs/FLUX.1-schnell",
+          prompt: prompt.trim(),
+          size: "1024x1024",
+        }),
+      }
+    );
 
-    const imageBlob = await client.textToImage({
-      model: "black-forest-labs/FLUX.1-schnell",
-      provider: "auto",
-      inputs: prompt.trim(),
-    });
+    if (!response.ok) {
+      const details = await response.text();
 
-    const contentType = imageBlob.type || "image/png";
+      console.error("Hugging Face image error:", details);
 
-    if (!contentType.startsWith("image/")) {
-      throw new Error(`Unexpected image response type: ${contentType}`);
+      return NextResponse.json(
+        {
+          error: "Image generation failed.",
+          details: details.slice(0, 1000),
+        },
+        { status: 502 }
+      );
     }
 
-    const imageBase64 = Buffer.from(
-      await imageBlob.arrayBuffer()
-    ).toString("base64");
+    const contentType = response.headers.get("content-type") || "";
 
-    return NextResponse.json({
-      success: true,
-      reply: "Here is your generated image!",
-      image: `data:${contentType};base64,${imageBase64}`,
-    });
+    if (contentType.startsWith("image/")) {
+      const bytes = Buffer.from(await response.arrayBuffer());
+
+      return NextResponse.json({
+        success: true,
+        image: `data:${contentType};base64,${bytes.toString("base64")}`,
+      });
+    }
+
+    if (contentType.includes("application/json")) {
+      const result = await response.json();
+      const imageData =
+        result.data?.[0]?.b64_json ||
+        result.image ||
+        result.data?.[0]?.url;
+
+      if (typeof imageData === "string") {
+        return NextResponse.json({
+          success: true,
+          image: imageData.startsWith("data:image/") ||
+            /^https?:\/\//i.test(imageData)
+            ? imageData
+            : `data:image/png;base64,${imageData}`,
+        });
+      }
+    }
+
+    return NextResponse.json(
+      { error: "The provider returned an unsupported image response." },
+      { status: 502 }
+    );
   } catch (error) {
-    console.error("NexusAI image generation error:", error);
+    console.error("Image generation error:", error);
 
     return NextResponse.json(
       {
         error: "Image generation failed.",
         details:
-          error instanceof Error
-            ? error.message
-            : "Unknown image generation error.",
+          error instanceof Error ? error.message : "Unknown server error.",
       },
       { status: 500 }
     );
