@@ -10,7 +10,7 @@ export async function POST(request: Request) {
 
     if (!token) {
       return NextResponse.json(
-        { error: "HF_TOKEN is missing from the environment variables." },
+        { error: "HF_TOKEN is missing. Add it to Vercel Environment Variables." },
         { status: 500 }
       );
     }
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const prompt = body.prompt;
 
-    if (!prompt || typeof prompt !== "string") {
+    if (typeof prompt !== "string" || !prompt.trim()) {
       return NextResponse.json(
         { error: "Please provide an image prompt." },
         { status: 400 }
@@ -30,35 +30,34 @@ export async function POST(request: Request) {
     const imageBlob = await client.textToImage({
       model: "black-forest-labs/FLUX.1-schnell",
       provider: "auto",
-      inputs: prompt,
-      parameters: {
-        num_inference_steps: 4,
-      },
+      inputs: prompt.trim(),
     });
 
-    const imageBuffer = Buffer.from(
-      await imageBlob.arrayBuffer()
-    );
+    const contentType = imageBlob.type || "image/png";
 
-    const imageBase64 = imageBuffer.toString("base64");
+    if (!contentType.startsWith("image/")) {
+      throw new Error(`Unexpected image response type: ${contentType}`);
+    }
+
+    const imageBase64 = Buffer.from(
+      await imageBlob.arrayBuffer()
+    ).toString("base64");
 
     return NextResponse.json({
       success: true,
-      image: `data:image/png;base64,${imageBase64}`,
-      prompt,
+      reply: "Here is your generated image!",
+      image: `data:${contentType};base64,${imageBase64}`,
     });
   } catch (error) {
-    console.error("Image generation error:", error);
-
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Unknown image generation error";
+    console.error("NexusAI image generation error:", error);
 
     return NextResponse.json(
       {
         error: "Image generation failed.",
-        details: message,
+        details:
+          error instanceof Error
+            ? error.message
+            : "Unknown image generation error.",
       },
       { status: 500 }
     );
