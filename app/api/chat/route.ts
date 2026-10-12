@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { InferenceClient } from "@huggingface/inference";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -9,20 +8,9 @@ type ChatMessage = {
   content: string;
 };
 
-function isImageRequest(message: string): boolean {
-  const text = message.toLowerCase();
-
-  return (
-    /\b(generate|create|make|draw|produce|render)\b.{0,100}\b(image|picture|photo|artwork|illustration|wallpaper)\b/i.test(
-      text
-    ) ||
-    /\b(image|picture|photo|artwork|illustration|wallpaper)\b.{0,100}\b(generate|create|make|draw|produce|render)\b/i.test(
-      text
-    ) ||
-    /\b(generate|create|make|draw|render)\s+(me\s+)?(a|an|some)\b/i.test(
-      text
-    ) &&
-      /\b(image|picture|photo|wallpaper|illustration|artwork)\b/i.test(text)
+function isImageRequest(text: string): boolean {
+  return /\b(generate|create|make|draw|render|produce)\b.{0,100}\b(image|picture|photo|artwork|illustration|wallpaper)\b/i.test(
+    text
   );
 }
 
@@ -39,13 +27,13 @@ export async function POST(request: Request) {
 
     const messages: ChatMessage[] = body.messages
       .filter(
-        (message: { role?: string; content?: unknown }) =>
-          ["user", "assistant"].includes(message.role || "") &&
-          typeof message.content === "string"
+        (m: { role?: string; content?: unknown }) =>
+          ["user", "assistant"].includes(m.role || "") &&
+          typeof m.content === "string"
       )
-      .map((message: ChatMessage) => ({
-        role: message.role,
-        content: message.content,
+      .map((m: ChatMessage) => ({
+        role: m.role,
+        content: m.content,
       }));
 
     if (messages.length === 0) {
@@ -57,52 +45,112 @@ export async function POST(request: Request) {
 
     const latestMessage = messages[messages.length - 1].content;
 
-    // Generate an actual image for image requests.
+    // IMAGE GENERATION
     if (isImageRequest(latestMessage)) {
       const token = process.env.HF_TOKEN;
 
       if (!token) {
         return NextResponse.json(
-          {
-            error:
-              "Image generation is not configured. Add HF_TOKEN to Vercel Environment Variables.",
-          },
+          { error: "HF_TOKEN is missing from Vercel Environment Variables." },
           { status: 500 }
         );
       }
 
-      const client = new InferenceClient(token);
+      const response = await fetch(
+        "https://router.huggingface.co/v1/images/generations",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "black-forest-labs/FLUX.1-schnell",
+            prompt: latestMessage,
+            size: "1024x1024",
+          }),
+        }
+      );
 
-      const imageBlob = await client.textToImage({
-        model: "black-forest-labs/FLUX.1-schnell",
-        provider: "auto",
-        inputs: latestMessage,
-      });
+      if (!response.ok) {
+        const details = await response.text();
 
-      const contentType = imageBlob.type || "image/png";
+        console.error("Hugging Face error:", details);
 
-      if (!contentType.startsWith("image/")) {
-        throw new Error(
-          `The image provider returned an unexpected content type: ${contentType}`
+        return NextResponse.json(
+          {
+            error: "Image generation failed.",
+            details: details.slice(0, 1000),
+          },
+          { status: 502 }
         );
       }
 
-      const imageBase64 = Buffer.from(
-        await imageBlob.arrayBuffer()
-      ).toString("base64");
+      const contentType = response.headers.get("content-type") || "";
+
+      // Some providers return JSON containing a base64 image.
+      if (contentType.includes("application/json")) {
+        const result = await response.json();
+
+        const imageData =
+          result.data?.[0]?.b64_json ||
+          result.image ||
+          result.data?.[0]?.url;
+
+        if (typeof imageData !== "string") {
+          return NextResponse.json(
+            {
+              error: "The image provider returned no usable image.",
+            },
+            { status: 502 }
+          );
+        }
+
+        if (imageData.startsWith("data:image/")) {
+          return NextResponse.json({
+            reply: "Here is your generated image!",
+            image: imageData,
+          });
+        }
+
+        if (/^https?:\/\//i.test(imageData)) {
+          return NextResponse.json({
+            reply: "Here is your generated image!",
+            image: imageData,
+          });
+        }
+
+        return NextResponse.json({
+          reply: "Here is your generated image!",
+          image: `data:image/png;base64,${imageData}`,
+        });
+      }
+
+      // Some providers return the image bytes directly.
+      if (!contentType.startsWith("image/")) {
+        return NextResponse.json(
+          {
+            error: "The provider returned an unsupported response type.",
+            details: contentType || "Unknown content type",
+          },
+          { status: 502 }
+        );
+      }
+
+      const bytes = Buffer.from(await response.arrayBuffer());
 
       return NextResponse.json({
         reply: "Here is your generated image!",
-        image: `data:${contentType};base64,${imageBase64}`,
+        image: `data:${contentType};base64,${bytes.toString("base64")}`,
       });
     }
 
-    // Normal text chat uses OpenRouter.
+    // NORMAL TEXT CHAT
     const apiKey = process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "OPENROUTER_API_KEY is missing from the environment variables." },
+        { error: "OPENROUTER_API_KEY is missing from Vercel." },
         { status: 500 }
       );
     }
@@ -121,7 +169,7 @@ export async function POST(request: Request) {
             {
               role: "system",
               content:
-                "You are NexusAI, a helpful multilingual AI assistant. Reply in the same language as the user's latest message. Be friendly, clear, accurate, and beginner-friendly. Do not claim to generate images in a normal text response.",
+                "You are NexusAI, a helpful multilingual assistant. Reply in the same language as the user. Be clear, friendly, and accurate. Do not claim to have generated an image in a text-only response.",
             },
             ...messages,
           ],
@@ -135,7 +183,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            data.error?.message || "The AI provider request failed.",
+            data.error?.message || "The chat provider request failed.",
         },
         { status: response.status }
       );
@@ -147,15 +195,13 @@ export async function POST(request: Request) {
         "No response received. Please try again.",
     });
   } catch (error) {
-    console.error("NexusAI chat API error:", error);
+    console.error("NexusAI error:", error);
 
     return NextResponse.json(
       {
-        error: "Image generation or chat failed.",
+        error: "The request failed.",
         details:
-          error instanceof Error
-            ? error.message
-            : "Unknown server error.",
+          error instanceof Error ? error.message : "Unknown server error.",
       },
       { status: 500 }
     );
