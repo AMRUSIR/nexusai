@@ -14,11 +14,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const { prompt } = await request.json();
+    const body = await request.json().catch(() => null);
+    const prompt = body?.prompt;
 
-    if (!prompt || typeof prompt !== "string") {
+    if (typeof prompt !== "string" || !prompt.trim()) {
       return NextResponse.json(
-        { error: "Please enter an image prompt." },
+        { error: "Please enter a description for the image." },
         { status: 400 }
       );
     }
@@ -27,13 +28,15 @@ export async function POST(request: Request) {
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-image",
-      contents: prompt,
+      contents: prompt.trim(),
       config: {
         responseModalities: ["TEXT", "IMAGE"],
       },
     });
 
-    for (const part of response.candidates?.[0]?.content?.parts ?? []) {
+    const parts = response.candidates?.[0]?.content?.parts ?? [];
+
+    for (const part of parts) {
       if (part.inlineData?.data) {
         const mimeType = part.inlineData.mimeType || "image/png";
 
@@ -45,14 +48,17 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { error: "The model did not return an image. Try another prompt." },
+      { error: "The model did not return an image. Try a different prompt." },
       { status: 502 }
     );
   } catch (error) {
-    console.error("Image generation error:", error);
+    console.error("NexusAI image generation error:", error);
+
+    const message =
+      error instanceof Error ? error.message : "Unknown server error.";
 
     return NextResponse.json(
-      { error: "Image generation failed. Check the Vercel function logs." },
+      { error: `Image generation failed: ${message}` },
       { status: 500 }
     );
   }
