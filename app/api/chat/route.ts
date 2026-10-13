@@ -18,15 +18,15 @@ export async function POST(request: Request) {
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "OPENROUTER_API_KEY is missing. Add it in Vercel Environment Variables." },
+        { error: "OPENROUTER_API_KEY is missing from Vercel." },
         { status: 500 }
       );
     }
 
     const messages = body.messages.filter(
-      (message: { role?: string; content?: unknown }) =>
-        ["user", "assistant"].includes(message.role || "") &&
-        typeof message.content === "string"
+      (m: { role?: string; content?: unknown }) =>
+        ["user", "assistant"].includes(m.role || "") &&
+        typeof m.content === "string"
     );
 
     if (messages.length === 0) {
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
             {
               role: "system",
               content:
-                "You are NexusAI, a friendly and helpful AI assistant. Answer clearly and naturally. Respond in the same language as the user.",
+                "You are NexusAI, a helpful AI assistant. Respond in the same language as the user.",
             },
             ...messages,
           ],
@@ -61,27 +61,17 @@ export async function POST(request: Request) {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("OpenRouter API error:", data);
-
       return NextResponse.json(
-        {
-          error:
-            data.error?.message || "The AI service could not complete your request.",
-        },
+        { error: data.error?.message || "AI request failed." },
         { status: response.status }
       );
     }
 
-    const reply = data.choices?.[0]?.message?.content;
-
     return NextResponse.json({
-      reply:
-        typeof reply === "string" && reply.length > 0
-          ? reply
-          : "I couldn't generate a response. Please try again.",
+      reply: data.choices?.[0]?.message?.content || "No response received.",
     });
   } catch (error) {
-    console.error("NexusAI API error:", error);
+    console.error("NexusAI error:", error);
 
     return NextResponse.json(
       { error: "Something went wrong. Please try again." },
@@ -89,4 +79,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
