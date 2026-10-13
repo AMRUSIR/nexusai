@@ -1,6 +1,6 @@
+```typescript
 import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
@@ -67,6 +67,7 @@ export async function POST(request: Request) {
 
     if (contentType.includes("application/json")) {
       const result = await response.json();
+
       const imageData =
         result.data?.[0]?.b64_json ||
         result.image ||
@@ -75,10 +76,11 @@ export async function POST(request: Request) {
       if (typeof imageData === "string") {
         return NextResponse.json({
           success: true,
-          image: imageData.startsWith("data:image/") ||
+          image:
+            imageData.startsWith("data:image/") ||
             /^https?:\/\//i.test(imageData)
-            ? imageData
-            : `data:image/png;base64,${imageData}`,
+              ? imageData
+              : `data:image/png;base64,${imageData}`,
         });
       }
     }
@@ -100,3 +102,4 @@ export async function POST(request: Request) {
     );
   }
 }
+```
