@@ -1,6 +1,6 @@
+```typescript
 import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
 export const maxDuration = 60;
 
 type ChatMessage = {
@@ -74,7 +74,6 @@ export async function POST(request: Request) {
 
       if (!response.ok) {
         const details = await response.text();
-
         console.error("Hugging Face error:", details);
 
         return NextResponse.json(
@@ -88,7 +87,6 @@ export async function POST(request: Request) {
 
       const contentType = response.headers.get("content-type") || "";
 
-      // Some providers return JSON containing a base64 image.
       if (contentType.includes("application/json")) {
         const result = await response.json();
 
@@ -99,9 +97,7 @@ export async function POST(request: Request) {
 
         if (typeof imageData !== "string") {
           return NextResponse.json(
-            {
-              error: "The image provider returned no usable image.",
-            },
+            { error: "The image provider returned no usable image." },
             { status: 502 }
           );
         }
@@ -126,7 +122,6 @@ export async function POST(request: Request) {
         });
       }
 
-      // Some providers return the image bytes directly.
       if (!contentType.startsWith("image/")) {
         return NextResponse.json(
           {
@@ -207,3 +202,4 @@ export async function POST(request: Request) {
     );
   }
 }
+```
