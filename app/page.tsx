@@ -162,8 +162,8 @@ export default function Home() {
         body {
           margin: 0;
           min-height: 100%;
-          background: #090a0f;
-          color: #f4f4f8;
+          background: #f7f8fc;
+          color: #20212b;
           font-family: Arial, Helvetica, sans-serif;
         }
 
@@ -182,10 +182,10 @@ export default function Home() {
           background:
             radial-gradient(
               ellipse at 70% -15%,
-              rgba(92, 65, 190, 0.13),
+              rgba(92, 65, 190, 0.045),
               transparent 45%
             ),
-            #090a0f;
+            #f7f8fc;
         }
 
         .sidebar {
@@ -194,7 +194,7 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           padding: 22px 15px;
-          background: rgba(15, 16, 23, 0.96);
+          background: rgba(255, 255, 255, 0.98);
           border-right: 1px solid #22232d;
         }
 
@@ -234,13 +234,13 @@ export default function Home() {
           align-items: center;
           gap: 10px;
           padding: 13px;
-          color: #fff;
+          color: #292a38;
           background: linear-gradient(
             110deg,
             rgba(125, 91, 240, 0.2),
             rgba(80, 108, 255, 0.12)
           );
-          border: 1px solid #4c416c;
+          border: 1px solid #ded6f4;
           border-radius: 11px;
           cursor: pointer;
           text-align: left;
@@ -248,13 +248,13 @@ export default function Home() {
         }
 
         .new-chat:hover {
-          background: #29213d;
-          border-color: #8b72d9;
+          background: #f2edff;
+          border-color: #b9a8ee;
         }
 
         .sidebar-label {
           margin: 30px 8px 12px;
-          color: #777989;
+          color: #6f7182;
           font-size: 11px;
           text-transform: uppercase;
           letter-spacing: 1.3px;
@@ -262,7 +262,7 @@ export default function Home() {
 
         .history-empty {
           padding: 8px;
-          color: #777989;
+          color: #6f7182;
           font-size: 12px;
           line-height: 1.7;
         }
@@ -270,7 +270,7 @@ export default function Home() {
         .sidebar-bottom {
           margin-top: auto;
           padding: 14px 8px 0;
-          border-top: 1px solid #252631;
+          border-top: 1px solid #e7e8ef;
         }
 
         .profile {
@@ -284,8 +284,8 @@ export default function Home() {
           height: 34px;
           display: grid;
           place-items: center;
-          background: #252538;
-          border: 1px solid #48405f;
+          background: #f1f2f8;
+          border: 1px solid #e1d9f2;
           border-radius: 50%;
           color: #c6b5ff;
         }
@@ -297,7 +297,7 @@ export default function Home() {
 
         .profile-caption {
           margin-top: 4px;
-          color: #777989;
+          color: #6f7182;
           font-size: 11px;
         }
 
@@ -316,12 +316,12 @@ export default function Home() {
           align-items: center;
           justify-content: space-between;
           padding: 0 30px;
-          border-bottom: 1px solid #20212a;
-          background: rgba(9, 10, 15, 0.7);
+          border-bottom: 1px solid #e7e8ef;
+          background: rgba(247, 248, 252, 0.88);
         }
 
         .model-name {
-          color: #e9e8f0;
+          color: #343545;
           font-size: 13px;
           font-weight: 600;
         }
@@ -331,7 +331,7 @@ export default function Home() {
           align-items: center;
           gap: 7px;
           margin-top: 5px;
-          color: #8c8d9d;
+          color: #6f7182;
           font-size: 11px;
         }
 
@@ -351,16 +351,16 @@ export default function Home() {
 
         .top-button {
           padding: 9px 13px;
-          color: #c4c4d0;
-          background: #14151d;
-          border: 1px solid #292a35;
+          color: #656779;
+          background: #ffffff;
+          border: 1px solid #e4e6ee;
           border-radius: 9px;
           font-size: 12px;
           cursor: pointer;
         }
 
         .top-button:hover {
-          background: #20212c;
+          background: #f0f1f6;
         }
 
         .mobile-menu {
@@ -416,7 +416,7 @@ export default function Home() {
         .welcome-description {
           max-width: 440px;
           margin: 15px auto 32px;
-          color: #999aaa;
+          color: #6f7182;
           text-align: center;
           font-size: 14px;
           line-height: 1.8;
@@ -432,9 +432,9 @@ export default function Home() {
           min-height: 100px;
           padding: 17px;
           text-align: left;
-          color: #f2f0fa;
-          background: rgba(20, 21, 31, 0.8);
-          border: 1px solid #292a37;
+          color: #252535;
+          background: rgba(255, 255, 255, 0.92);
+          border: 1px solid #e4e6ee;
           border-radius: 14px;
           cursor: pointer;
           transition:
@@ -445,8 +445,8 @@ export default function Home() {
 
         .suggestion:hover {
           transform: translateY(-2px);
-          background: #191a28;
-          border-color: #6553a4;
+          background: #f1f2f8;
+          border-color: #c9bdf4;
         }
 
         .suggestion-icon {
@@ -465,7 +465,7 @@ export default function Home() {
         .suggestion-text {
           display: block;
           margin-top: 6px;
-          color: #9293a4;
+          color: #6f7182;
           font-size: 11px;
           line-height: 1.5;
         }
@@ -494,16 +494,16 @@ export default function Home() {
           flex-shrink: 0;
           display: grid;
           place-items: center;
-          border: 1px solid #393044;
+          border: 1px solid #e7e0f2;
           border-radius: 11px;
           color: #c6b2ff;
-          background: #211a33;
+          background: #f4f0ff;
         }
 
         .message.user .message-avatar {
-          color: #fff;
-          background: #30314b;
-          border-color: #444563;
+          color: #292a38;
+          background: #e8e5f5;
+          border-color: #d9d6ec;
         }
 
         .message-body {
@@ -514,7 +514,7 @@ export default function Home() {
 
         .message-role {
           margin-bottom: 8px;
-          color: #b7b6c7;
+          color: #696b7c;
           font-size: 12px;
           font-weight: 650;
         }
@@ -524,7 +524,7 @@ export default function Home() {
         }
 
         .message-content {
-          color: #e3e3ed;
+          color: #343545;
           font-size: 14px;
           line-height: 1.85;
           overflow-wrap: anywhere;
@@ -533,8 +533,8 @@ export default function Home() {
 
         .message.user .message-content {
           padding: 12px 15px;
-          background: #252437;
-          border: 1px solid #37344e;
+          background: #f0eef9;
+          border: 1px solid #e5e0f2;
           border-radius: 15px 4px 15px 15px;
         }
 
@@ -578,8 +578,8 @@ export default function Home() {
           padding-top: 15px;
           background: linear-gradient(
             180deg,
-            rgba(9, 10, 15, 0),
-            #090a0f 18%
+            rgba(247, 248, 252, 0),
+            #f7f8fc 18%
           );
         }
 
@@ -588,15 +588,15 @@ export default function Home() {
           align-items: flex-end;
           gap: 12px;
           padding: 15px 15px 13px 19px;
-          background: #14151e;
-          border: 1px solid #343542;
+          background: #ffffff;
+          border: 1px solid #dfe2eb;
           border-radius: 17px;
           box-shadow: 0 12px 50px #00000025;
           transition: border-color 0.2s;
         }
 
         .composer:focus-within {
-          border-color: #7060ae;
+          border-color: #c5b9ee;
         }
 
         .composer textarea {
@@ -607,14 +607,14 @@ export default function Home() {
           resize: vertical;
           outline: none;
           border: none;
-          color: #f4f2fc;
+          color: #252535;
           background: transparent;
           font-size: 14px;
           line-height: 1.7;
         }
 
         .composer textarea::placeholder {
-          color: #77798b;
+          color: #6f7182;
         }
 
         .send-button {
@@ -654,7 +654,7 @@ export default function Home() {
         .empty-note {
           margin: auto 0 12px;
           text-align: center;
-          color: #77798a;
+          color: #6f7182;
           font-size: 11px;
         }
 
@@ -679,10 +679,10 @@ export default function Home() {
             width: 35px;
             height: 35px;
             margin-right: 9px;
-            border: 1px solid #292a35;
+            border: 1px solid #e4e6ee;
             border-radius: 9px;
             color: #eee;
-            background: #14151d;
+            background: #ffffff;
             cursor: pointer;
           }
 
@@ -924,8 +924,8 @@ export default function Home() {
             style={{
               marginBottom: 18,
               padding: 16,
-              background: "#14151e",
-              border: "1px solid #343542",
+              background: "#ffffff",
+              border: "1px solid #dfe2eb",
               borderRadius: 16,
             }}
           >
@@ -942,9 +942,9 @@ export default function Home() {
               style={{
                 width: "100%",
                 padding: 12,
-                color: "#f4f4f8",
-                background: "#090a0f",
-                border: "1px solid #343542",
+                color: "#20212b",
+                background: "#f7f8fc",
+                border: "1px solid #dfe2eb",
                 borderRadius: 10,
                 resize: "vertical",
                 outline: "none",
@@ -962,7 +962,7 @@ export default function Home() {
                 flexWrap: "wrap",
               }}
             >
-              <span style={{ color: "#9293a4", fontSize: 11 }}>
+              <span style={{ color: "#6f7182", fontSize: 11 }}>
                 {imagePrompt.length}/2000 characters
               </span>
               <button
