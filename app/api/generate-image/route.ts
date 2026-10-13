@@ -32,33 +32,31 @@ export async function POST(request: Request) {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({ prompt: prompt.trim() }),
+        cache: "no-store",
       }
     );
 
-    const data = await response.json().catch(() => null);
-
     if (!response.ok) {
+      const errorText = await response.text();
+
+      console.error("Cloudflare API error:", response.status, errorText);
+
       return NextResponse.json(
         {
-          error:
-            data?.error ||
-            `Image API request failed with status ${response.status}.`,
+          error: `Image API failed (${response.status}): ${errorText}`,
         },
         { status: response.status }
       );
     }
 
-    if (data?.image) {
-      return NextResponse.json({
-        success: true,
-        image: data.image,
-      });
-    }
+    // Cloudflare returns JPEG bytes, not JSON.
+    const imageBuffer = await response.arrayBuffer();
+    const base64 = Buffer.from(imageBuffer).toString("base64");
 
-    return NextResponse.json(
-      { error: data?.error || "The API did not return an image." },
-      { status: 502 }
-    );
+    return NextResponse.json({
+      success: true,
+      image: `data:image/jpeg;base64,${base64}`,
+    });
   } catch (error) {
     console.error("NexusAI image generation error:", error);
 
