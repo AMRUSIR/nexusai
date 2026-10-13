@@ -68,24 +68,7 @@ export default function Home() {
         body: JSON.stringify({ messages: updatedMessages }),
       });
 
-      const responseText = await response.text();
-      let data: any;
-
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        console.error(
-          "API returned non-JSON response:",
-          response.status,
-          responseText.slice(0, 300)
-        );
-
-        throw new Error(
-          response.status === 404
-            ? "API route not found. Check that the API file exists and redeploy."
-            : `Server returned HTML instead of JSON (HTTP ${response.status}). Check the Vercel deployment and function logs.`
-        );
-      }
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Unable to get a response.");
@@ -134,24 +117,7 @@ export default function Home() {
         body: JSON.stringify({ prompt }),
       });
 
-      const responseText = await response.text();
-      let data: any;
-
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        console.error(
-          "API returned non-JSON response:",
-          response.status,
-          responseText.slice(0, 300)
-        );
-
-        throw new Error(
-          response.status === 404
-            ? "API route not found. Check that the API file exists and redeploy."
-            : `Server returned HTML instead of JSON (HTTP ${response.status}). Check the Vercel deployment and function logs.`
-        );
-      }
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Image generation failed.");
