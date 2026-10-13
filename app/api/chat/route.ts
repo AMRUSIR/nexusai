@@ -31,7 +31,7 @@ export async function POST(request: Request) {
           ["user", "assistant"].includes(m.role || "") &&
           typeof m.content === "string"
       )
-      .map((m: ChatMessage) => ({
+      .map((m: { role: "user" | "assistant"; content: string }) => ({
         role: m.role,
         content: m.content,
       }));
@@ -102,14 +102,10 @@ export async function POST(request: Request) {
           );
         }
 
-        if (imageData.startsWith("data:image/")) {
-          return NextResponse.json({
-            reply: "Here is your generated image!",
-            image: imageData,
-          });
-        }
-
-        if (/^https?:\/\//i.test(imageData)) {
+        if (
+          imageData.startsWith("data:image/") ||
+          /^https?:\/\//i.test(imageData)
+        ) {
           return NextResponse.json({
             reply: "Here is your generated image!",
             image: imageData,
