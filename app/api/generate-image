@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { NextResponse } from "next/server";
 
-export const maxDuration = 60;
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
@@ -10,24 +9,16 @@ export async function POST(request: Request) {
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY is missing from environment variables." },
+        { error: "GEMINI_API_KEY is missing in Vercel environment variables." },
         { status: 500 }
       );
     }
 
-    const body = await request.json();
-    const prompt = body.prompt;
+    const { prompt } = await request.json();
 
-    if (typeof prompt !== "string" || !prompt.trim()) {
+    if (!prompt || typeof prompt !== "string") {
       return NextResponse.json(
-        { error: "Please provide an image prompt." },
-        { status: 400 }
-      );
-    }
-
-    if (prompt.length > 2000) {
-      return NextResponse.json(
-        { error: "Prompt must be 2000 characters or fewer." },
+        { error: "Please enter an image prompt." },
         { status: 400 }
       );
     }
@@ -36,38 +27,32 @@ export async function POST(request: Request) {
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-image",
-      contents: prompt.trim(),
+      contents: prompt,
       config: {
-        responseModalities: ["IMAGE"],
+        responseModalities: ["TEXT", "IMAGE"],
       },
     });
 
-    const parts = response.candidates?.[0]?.content?.parts;
+    for (const part of response.candidates?.[0]?.content?.parts ?? []) {
+      if (part.inlineData?.data) {
+        const mimeType = part.inlineData.mimeType || "image/png";
 
-    const imagePart = parts?.find(
-      (part) => part.inlineData?.data
-    );
-
-    if (!imagePart?.inlineData?.data) {
-      return NextResponse.json(
-        { error: "Gemini did not return an image. Try another prompt." },
-        { status: 502 }
-      );
+        return NextResponse.json({
+          success: true,
+          image: `data:${mimeType};base64,${part.inlineData.data}`,
+        });
+      }
     }
 
-    const mimeType = imagePart.inlineData.mimeType || "image/png";
-
-    return NextResponse.json({
-      success: true,
-      image: `data:${mimeType};base64,${imagePart.inlineData.data}`,
-    });
+    return NextResponse.json(
+      { error: "The model did not return an image. Try another prompt." },
+      { status: 502 }
+    );
   } catch (error) {
-    console.error("Gemini image generation error:", error);
+    console.error("Image generation error:", error);
 
     return NextResponse.json(
-      {
-        error: "Image generation failed. Check your Gemini API access and quota.",
-      },
+      { error: "Image generation failed. Check the Vercel function logs." },
       { status: 500 }
     );
   }
